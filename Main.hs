@@ -1,14 +1,12 @@
-import Prelude
-
 data Term = VarWord | Variable | Type
           | Semicolon | Colon | Period
           | Epsilon | EndOfString
-  deriving Show
+  deriving (Show, Eq)
 
 data NonTerm = S | E | F | A
   deriving Show
 
-Expr = Either Term Nonterm
+type Expr = Either Term NonTerm
 
 rules :: NonTerm -> [[Expr]]
 rules S = [[Left VarWord, Right F, Left Semicolon, Right E]]
@@ -29,7 +27,7 @@ follow E = [EndOfString]
 follow F = [Semicolon]
 follow A = [Colon]
 
-Child = Either Term ParseTree
+type Child = Either Term ParseTree
 
 data ParseTree = Node [Child]
   deriving Show
@@ -37,7 +35,7 @@ data ParseTree = Node [Child]
 availableTerms :: NonTerm -> Expr -> [Term]
 availableTerms from to = let fst = first to in
   if Epsilon `elem` fst
-    then follow from ++ filter (not Epsilon) fst
+    then follow from ++ filter (/= Epsilon) fst
     else fst
 
 processRule :: [Term] -> [Expr] -> ([Child], [Term])
@@ -49,11 +47,11 @@ processRule (t:ts) ((Left x):xs) = if x == t
   else error("Wrong token")
 processRule ts ((Right x):xs) = let (tree, next) = process x ts in
   let (children, next2) = processRule next xs in
-    (tree:children, next2)
+    ((Right tree):children, next2)
 
 searchForRule :: NonTerm -> [Term] -> [[Expr]] -> ([Child], [Term])
 searchForRule _ [] _             = error("Should never happen")
-searchForRule _ (e:_) []         = error("Unexpected token: " ++ e)
+searchForRule _ (e:_) []         = error("Unexpected token: " ++ show e)
 searchForRule from (t:ts) (x:xs) = if t `elem` (availableTerms from $ head x)
   then processRule (t:ts) x
   else searchForRule from (t:ts) xs 
