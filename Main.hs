@@ -5,7 +5,7 @@ import System.Directory (doesFileExist)
 
 data Term = VarWord | Variable | Type
           | Semicolon | Colon | Comma
-          | Epsilon | EndOfString
+          | Epsilon | EndOfLine
   deriving (Show, Eq)
 
 data NonTerm = S | E | F | A
@@ -27,10 +27,22 @@ first (Right A) = [Comma, Epsilon]
 first (Left x)  = [x]
 
 follow :: NonTerm -> [Term]
-follow S = [EndOfString]
-follow E = [EndOfString]
+follow S = [EndOfLine]
+follow E = [EndOfLine]
 follow F = [Semicolon]
 follow A = [Colon]
+
+delphiTypes = ["byte", "shortint", "word", "smallint", "longword", "cardinal", "longint", "integer", "int64", "single", "currency", "double", "extended", "char", "widechar", "ansichar", "shortstring", "string", "ansistring", "widestring", "boolean"]
+
+resWords      = ["var"  , ","  , ":"  , ";"      , "n"     , "type", ""     ]
+resWordsTerms = [VarWord, Comma, Colon, Semicolon, Variable, Type  , Epsilon]
+
+maybeChoose :: (a -> Bool) -> [a] -> [b] -> b -> b
+maybeChoose _ [] _ def          = def
+maybeChoose _ _ [] def          = def
+maybeChoose p (x:xs) (y:ys) def = if p x
+  then y
+  else maybeChoose p xs ys def
 
 type Child = Either Term ParseTree
 
@@ -39,7 +51,7 @@ data ParseTree = Node [Child]
 
 printTree :: ParseTree -> String
 printTree (Node [])                = ""
-printTree (Node ((Left term):xs))  = show term ++ " " ++ printTree (Node xs)
+printTree (Node ((Left term):xs))  = maybeChoose (== term) resWordsTerms resWords "!!!ATTENTION IMPROBABLE TERM!!!" ++ " " ++ printTree (Node xs)
 printTree (Node ((Right tree):xs)) = "( " ++ printTree tree ++ ") " ++ printTree (Node xs)
 
 availableTerms :: NonTerm -> Expr -> [Term]
@@ -49,6 +61,7 @@ availableTerms from to = let fst = first to in
     else fst
 
 processRule :: [Term] -> [Expr] -> ([Child], [Term])
+processRule [EndOfLine] []           = ([], [])
 processRule left []                  = ([], left)
 processRule [] _                     = error("Token expected but not found")
 processRule left ((Left Epsilon):xs) = processRule left xs
@@ -73,23 +86,15 @@ process :: NonTerm -> [Term] -> (ParseTree, [Term])
 process nonTerm left = let (children, next) = searchForRule nonTerm left (rules nonTerm) in
   (Node children, next)
 
-delphiTypes = ["byte", "shortint", "word", "smallint", "longword", "cardinal", "longint", "integer", "int64", "single", "currency", "double", "extended", "char", "widechar", "ansichar", "shortstring", "string", "ansistring", "widestring", "boolean"]
-
-resWords      = ["var"  , ","  , ":"  , ";"      ]
-resWordsTerms = [VarWord, Comma, Colon, Semicolon]
+processAll :: NonTerm -> [Term] -> ParseTree
+processAll nonTerm text = let (tree, left) = process nonTerm text in
+  case left of
+    [] -> tree
+    _  -> error("Some symbols were not parsed at all.")
 
 wordsToTerm :: [String] -> [Term]
-wordsToTerm []     = [EndOfString]
-wordsToTerm (x:xs) = (tryResAndTypes x resWords resWordsTerms):(wordsToTerm xs)
-
-tryResAndTypes :: String -> [String] -> [Term] -> Term
-tryResAndTypes x [] _          = if x `elem` delphiTypes
-  then Type
-  else Variable
-
-tryResAndTypes x (y:ys) (z:zs) = if x == y
-  then z
-  else tryResAndTypes x ys zs
+wordsToTerm []     = [EndOfLine]
+wordsToTerm (x:xs) = (maybeChoose (== x) (take 4 resWords) resWordsTerms (if x `elem` delphiTypes then Type else Variable)):(wordsToTerm xs)
 
 stringToWords :: String -> [String]
 stringToWords [] = []
