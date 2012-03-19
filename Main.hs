@@ -51,7 +51,7 @@ data ParseTree = Node [Child]
 
 printTree :: ParseTree -> String
 printTree (Node [])                = ""
-printTree (Node ((Left term):xs))  = maybeChoose (== term) resWordsTerms resWords "!!!ATTENTION IMPOSSIBLE TERM!!!" ++ " " ++ printTree (Node xs)
+printTree (Node ((Left term):xs))  = maybeChoose (== term) resWordsTerms resWords (error("Should never happen")::String) ++ " " ++ printTree (Node xs)
 printTree (Node ((Right tree):xs)) = "( " ++ printTree tree ++ ") " ++ printTree (Node xs)
 
 availableTerms :: NonTerm -> Expr -> [Term]
@@ -61,7 +61,6 @@ availableTerms from to = let fst = first to in
     else fst
 
 processRule :: [Term] -> [Expr] -> ([Child], [Term])
-processRule [EndOfLine] []           = ([], [])
 processRule left []                  = ([], left)
 processRule [] _                     = error("Token expected but not found")
 processRule left ((Left Epsilon):xs) = processRule left xs
@@ -89,8 +88,8 @@ process nonTerm left = let (children, next) = searchForRule nonTerm left (rules 
 processAll :: NonTerm -> [Term] -> ParseTree
 processAll nonTerm text = let (tree, left) = process nonTerm text in
   case left of
-    [] -> tree
-    _  -> error("Some symbols were not parsed at all.")
+    [EndOfLine] -> tree
+    _           -> error("Some symbols were not parsed at all.")
 
 wordsToTerm :: [String] -> [Term]
 wordsToTerm []     = [EndOfLine]
