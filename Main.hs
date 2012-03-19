@@ -114,5 +114,5 @@ main = do
   inExists <- doesFileExist input
   if not inExists then putStrLn "Input file does not exist." else do
   source <- readFile input
-  CE.catch (writeFile (args !! 1) (printTree $ fst $ process S $ wordsToTerm $ stringToWords source))
+  CE.catch (writeFile (args !! 1) (printTree $ processAll S $ wordsToTerm $ stringToWords source))
     (\ e -> putStrLn $ show (e::CE.SomeException))
