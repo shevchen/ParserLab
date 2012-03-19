@@ -1,5 +1,7 @@
 import Data.Char (isAlphaNum, isSpace)
 import System.Environment (getArgs)
+import qualified Control.Exception as CE
+import System.Directory (doesFileExist)
 
 data Term = VarWord | Variable | Type
           | Semicolon | Colon | Comma
@@ -36,9 +38,9 @@ data ParseTree = Node [Child]
   deriving Show
 
 printTree :: ParseTree -> String
-printTree (Node [])     = ""
-printTree (Node ((Left term):xs)) = show term ++ printTree (Node xs)
-printTree (Node ((Right tree):xs)) = "(" ++ printTree tree ++ ")" ++ printTree (Node xs)
+printTree (Node [])                = ""
+printTree (Node ((Left term):xs))  = show term ++ " " ++ printTree (Node xs)
+printTree (Node ((Right tree):xs)) = "( " ++ printTree tree ++ ") " ++ printTree (Node xs)
 
 availableTerms :: NonTerm -> Expr -> [Term]
 availableTerms from to = let fst = first to in
@@ -101,6 +103,11 @@ stringToWords (x:xs) = if isSpace x
 
 main :: IO ()
 main = do
-  args   <- getArgs
-  source <- readFile $ head args
-  writeFile (args !! 1) $ printTree $ fst $ process S $ wordsToTerm $ stringToWords source
+  args <- getArgs
+  if length args < 2 then putStrLn "Please specify input and output files." else do
+  let input = head args in do
+  inExists <- doesFileExist input
+  if not inExists then putStrLn "Input file does not exist." else do
+  source <- readFile input
+  CE.catch (writeFile (args !! 1) (printTree $ fst $ process S $ wordsToTerm $ stringToWords source))
+    (\ e -> putStrLn $ show (e::CE.SomeException))
