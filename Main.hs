@@ -1,4 +1,4 @@
-import Data.Char (isAlphaNum, isSpace)
+import Data.Char (isAlphaNum, isSpace, toLower)
 import System.Environment (getArgs)
 import qualified Control.Exception as CE
 import System.Directory (doesFileExist)
@@ -51,7 +51,7 @@ data ParseTree = Node [Child]
 
 printTree :: ParseTree -> String
 printTree (Node [])                = ""
-printTree (Node ((Left term):xs))  = maybeChoose (== term) resWordsTerms resWords "!!!ATTENTION IMPROBABLE TERM!!!" ++ " " ++ printTree (Node xs)
+printTree (Node ((Left term):xs))  = maybeChoose (== term) resWordsTerms resWords "!!!ATTENTION IMPOSSIBLE TERM!!!" ++ " " ++ printTree (Node xs)
 printTree (Node ((Right tree):xs)) = "( " ++ printTree tree ++ ") " ++ printTree (Node xs)
 
 availableTerms :: NonTerm -> Expr -> [Term]
@@ -104,7 +104,7 @@ stringToWords (x:xs) = if isSpace x
     ([], y:ys) -> if y `elem` ",:;"
       then [y]:(stringToWords ys)
       else error("Unexpected symbol: " ++ [y])
-    (s, other) -> s:(stringToWords other)
+    (s, other) -> (map toLower s):(stringToWords other)
 
 main :: IO ()
 main = do
