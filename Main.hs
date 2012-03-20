@@ -101,7 +101,7 @@ stringToWords (x:xs) = if isSpace x
     ([], y:ys) -> if y `elem` ",:;"
       then [y]:(stringToWords ys)
       else error("Unexpected symbol: " ++ [y])
-    (s, other) -> (map toLower s):(stringToWords other)
+    (s, other) -> s:(stringToWords other)
 
 main :: IO ()
 main = do
