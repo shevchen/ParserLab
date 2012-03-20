@@ -125,6 +125,6 @@ stringToWords (x:xs) = if isSpace x
 main :: IO ()
 main = do
   source <- getContents
-  let (processAll S $ wordsToTerm $ stringToWords source) in >>=
-    CE.catch (putStrLn . printDot)
-      (\ e -> putStrLn $ show (e::CE.SomeException))
+  let parsed = processAll S $ wordsToTerm $ stringToWords source in do
+  CE.catch (putStrLn $ printDot parsed)
+    (\ e -> putStrLn $ show (e::CE.SomeException))
