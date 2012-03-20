@@ -42,15 +42,35 @@ maybeChoose p (x:xs) (y:ys) def = if p x
   then y
   else maybeChoose p xs ys def
 
+pickTermWord :: Term -> String
+pickTermWord term = maybeChoose (== term) resWordsTerms resWords $ error("Not a term")::String
+
 type Child = Either Term (NonTerm, ParseTree)
 
 data ParseTree = Node [Child]
   deriving Show
 
 printTree :: ParseTree -> String
-printTree (Node [])                = ""
-printTree (Node ((Left term):xs))  = maybeChoose (== term) resWordsTerms resWords (error("Should never happen")::String) ++ " " ++ printTree (Node xs)
+printTree (Node [])                      = ""
+printTree (Node ((Left term):xs))        = show term ++ " " ++ printTree (Node xs)
 printTree (Node ((Right (nt, tree)):xs)) = "( " ++ (show nt) ++ ": " ++ printTree tree ++ ") " ++ printTree (Node xs)
+
+printDot :: ParseTree -> String
+printDot tree = "digraph parsed {\n  node [rank=same];\n" ++ fst (printDot' tree 0 Nothing) ++ "}"
+
+printDotNode :: Expr -> Int -> Maybe Int -> String
+printDotNode e n (Just p)   = "  v" ++ show p ++ " -> v" ++ show n ++ ";\n" ++
+  printDotNode e n Nothing
+printDotNode (Left t) n _   = "  v" ++ show n ++ " [label=\"" ++ pickTermWord t ++ "\" shape=box];\n"
+printDotNode (Right nt) n _ = "  v" ++ show n ++ " [label=" ++ show nt ++ "];\n"
+
+printDot' :: ParseTree -> Int -> Maybe Int -> (String, Int)
+printDot' (Node []) n _                      = ("", n)
+printDot' (Node ((Left term):xs)) n p        = let (str, num) = printDot' (Node xs) (n + 1) p in
+  ((printDotNode (Left term) n p) ++ str, num)
+printDot' (Node ((Right (nt, tree)):xs)) n p = let (str, num) = printDot' tree (n + 1) (Just n) in
+  let (str2, num2) = printDot' (Node xs) num p in
+    ((printDotNode (Right nt) n p) ++ str ++ str2, num2)
 
 availableTerms :: NonTerm -> Expr -> [Term]
 availableTerms from to = let fst = first to in
@@ -84,9 +104,9 @@ process nonTerm left = let (children, next) = searchForRule nonTerm left (rules 
   (Node children, next)
 
 processAll :: NonTerm -> [Term] -> ParseTree
-processAll nonTerm text = let (tree, left) = process nonTerm text in
+processAll start text = let (tree, left) = process start text in
   case left of
-    [EndOfLine] -> tree
+    [EndOfLine] -> Node [Right (start, tree)]
     _           -> error("Some symbols were not parsed at all.")
 
 wordsToTerm :: [String] -> [Term]
@@ -111,5 +131,5 @@ main = do
   inExists <- doesFileExist input
   if not inExists then putStrLn "Input file does not exist." else do
   source <- readFile input
-  CE.catch (writeFile (args !! 1) (printTree $ processAll S $ wordsToTerm $ stringToWords source))
+  CE.catch (writeFile (args !! 1) (printDot $ processAll S $ wordsToTerm $ stringToWords source))
     (\ e -> putStrLn $ show (e::CE.SomeException))
