@@ -44,7 +44,7 @@ maybeChoose p (x:xs) (y:ys) def = if p x
   then y
   else maybeChoose p xs ys def
 
-type Child = Either Term ParseTree
+type Child = Either Term (NonTerm, ParseTree)
 
 data ParseTree = Node [Child]
   deriving Show
@@ -52,7 +52,7 @@ data ParseTree = Node [Child]
 printTree :: ParseTree -> String
 printTree (Node [])                = ""
 printTree (Node ((Left term):xs))  = maybeChoose (== term) resWordsTerms resWords (error("Should never happen")::String) ++ " " ++ printTree (Node xs)
-printTree (Node ((Right tree):xs)) = "( " ++ printTree tree ++ ") " ++ printTree (Node xs)
+printTree (Node ((Right (nt, tree)):xs)) = "( " ++ (show nt) ++ ": " ++ printTree tree ++ ") " ++ printTree (Node xs)
 
 availableTerms :: NonTerm -> Expr -> [Term]
 availableTerms from to = let fst = first to in
@@ -70,7 +70,7 @@ processRule (t:ts) ((Left x):xs)     = if x == t
   else error("Wrong token: expected " ++ show x ++ ", found " ++ show t)
 processRule ts ((Right x):xs) = let (tree, next) = process x ts in
   let (children, next2) = processRule next xs in
-    ((Right tree):children, next2)
+    ((Right (x, tree)):children, next2)
 
 searchForRule :: NonTerm -> [Term] -> [[Expr]] -> ([Child], [Term])
 searchForRule _ [] _             = error("Should never happen")
