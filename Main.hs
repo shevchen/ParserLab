@@ -59,10 +59,8 @@ printDot :: ParseTree -> String
 printDot tree = "digraph parsed {\n" ++ fst (printDot' tree 0 Nothing) ++ "}"
 
 printDotNode :: Expr -> Int -> Maybe Int -> String
-printDotNode e n (Just p)   = "  v" ++ show p ++ " -> v" ++ show n ++ ";\n" ++
-  printDotNode e n Nothing
-printDotNode (Left t) n _   = "  subgraph {\n    rank = max;\n" ++
-  "    v" ++ show n ++ " [label=\"" ++ pickTermWord t ++ "\" shape=box width=0.2]\n  };\n"
+printDotNode e n (Just p)   = "  v" ++ show p ++ " -> v" ++ show n ++ ";\n" ++ printDotNode e n Nothing
+printDotNode (Left t) n _   = "  subgraph {\n    rank = max;\n" ++ "    v" ++ show n ++ " [label=\"" ++ pickTermWord t ++ "\" shape=box width=0.2];\n  };\n"
 printDotNode (Right nt) n _ = "  v" ++ show n ++ " [label=\"" ++ show nt ++ "\"];\n"
 
 printDot' :: ParseTree -> Int -> Maybe Int -> (String, Int)

@@ -1,2 +1,4 @@
+#!/bin/bash
+
 ghc --make Main.hs -o main
 rm -f Main.o Main.hi
