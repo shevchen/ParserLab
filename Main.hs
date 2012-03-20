@@ -2,6 +2,7 @@ import Data.Char (isAlphaNum, isSpace, toLower)
 import System.Environment (getArgs)
 import qualified Control.Exception as CE
 import System.Directory (doesFileExist)
+import Control.DeepSeq (deepseq)
 
 data Term = VarWord | Variable
           | Semicolon | Colon | Comma
@@ -125,6 +126,6 @@ stringToWords (x:xs) = if isSpace x
 main :: IO ()
 main = do
   source <- getContents
-  let parsed = processAll S $ wordsToTerm $ stringToWords source in do
-  CE.catch (putStrLn $ printDot parsed)
+  let output = printDot $ processAll S $ wordsToTerm $ stringToWords source in do
+  CE.catch (output `deepseq` putStrLn output)
     (\ e -> putStrLn $ show (e::CE.SomeException))
