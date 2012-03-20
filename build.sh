@@ -1,3 +1,3 @@
 ghc --make Main.hs -o main
-./main input.txt output.txt
+cat input.txt | ./main > output.txt
 dot output.txt -Tpng -o tree.png

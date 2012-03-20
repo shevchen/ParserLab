@@ -61,7 +61,8 @@ printDot tree = "digraph parsed {\n" ++ fst (printDot' tree 0 Nothing) ++ "}"
 printDotNode :: Expr -> Int -> Maybe Int -> String
 printDotNode e n (Just p)   = "  v" ++ show p ++ " -> v" ++ show n ++ ";\n" ++
   printDotNode e n Nothing
-printDotNode (Left t) n _   = "  v" ++ show n ++ " [label=\"" ++ pickTermWord t ++ "\" shape=box width=0.2];\n"
+printDotNode (Left t) n _   = "  subgraph {\n    rank = max;\n" ++
+  "    v" ++ show n ++ " [label=\"" ++ pickTermWord t ++ "\" shape=box width=0.2]\n  };\n"
 printDotNode (Right nt) n _ = "  v" ++ show n ++ " [label=\"" ++ show nt ++ "\"];\n"
 
 printDot' :: ParseTree -> Int -> Maybe Int -> (String, Int)
@@ -125,11 +126,6 @@ stringToWords (x:xs) = if isSpace x
 
 main :: IO ()
 main = do
-  args <- getArgs
-  if length args < 2 then putStrLn "Please specify input and output files." else do
-  let input = head args in do
-  inExists <- doesFileExist input
-  if not inExists then putStrLn "Input file does not exist." else do
-  source <- readFile input
-  CE.catch (writeFile (args !! 1) (printDot $ processAll S $ wordsToTerm $ stringToWords source))
+  source <- getContents
+  CE.catch (let result = printDot $ processAll S $ wordsToTerm $ stringToWords source in putStrLn result)
     (\ e -> putStrLn $ show (e::CE.SomeException))
