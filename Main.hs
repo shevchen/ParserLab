@@ -80,7 +80,7 @@ availableTerms from to = let fst = first to in
 
 processRule :: [Term] -> [Expr] -> ([Child], [Term])
 processRule left []                  = ([], left)
-processRule [] _                     = error("Token expected but not found")
+processRule [] _                     = error("Should never happen")
 processRule left ((Left Epsilon):xs) = processRule left xs
 processRule (t:ts) ((Left x):xs)     = if x == t
   then let (children, next) = processRule ts xs in
@@ -93,6 +93,7 @@ processRule ts ((Right x):xs) = let (tree, next) = process x ts in
 searchForRule :: NonTerm -> [Term] -> [[Expr]] -> ([Child], [Term])
 searchForRule _ [] _             = error("Should never happen")
 searchForRule _ (e:_) []         = error("Unexpected token: " ++ show e)
+searchForRule from left ([]:xs)  = searchForRule from left xs
 searchForRule from (t:ts) (x:xs) = if t `elem` (availableTerms from $ head x)
   then case processRule (t:ts) x of
     ([], left) -> ([Left Epsilon], left)
