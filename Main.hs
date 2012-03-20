@@ -56,13 +56,13 @@ printTree (Node ((Left term):xs))        = show term ++ " " ++ printTree (Node x
 printTree (Node ((Right (nt, tree)):xs)) = "( " ++ (show nt) ++ ": " ++ printTree tree ++ ") " ++ printTree (Node xs)
 
 printDot :: ParseTree -> String
-printDot tree = "digraph parsed {\n  node [rank=same];\n" ++ fst (printDot' tree 0 Nothing) ++ "}"
+printDot tree = "digraph parsed {\n" ++ fst (printDot' tree 0 Nothing) ++ "}"
 
 printDotNode :: Expr -> Int -> Maybe Int -> String
 printDotNode e n (Just p)   = "  v" ++ show p ++ " -> v" ++ show n ++ ";\n" ++
   printDotNode e n Nothing
-printDotNode (Left t) n _   = "  v" ++ show n ++ " [label=\"" ++ pickTermWord t ++ "\" shape=box];\n"
-printDotNode (Right nt) n _ = "  v" ++ show n ++ " [label=" ++ show nt ++ "];\n"
+printDotNode (Left t) n _   = "  v" ++ show n ++ " [label=\"" ++ pickTermWord t ++ "\" shape=box width=0.2];\n"
+printDotNode (Right nt) n _ = "  v" ++ show n ++ " [label=\"" ++ show nt ++ "\"];\n"
 
 printDot' :: ParseTree -> Int -> Maybe Int -> (String, Int)
 printDot' (Node []) n _                      = ("", n)
