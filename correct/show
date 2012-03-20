@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cat "$1" | ../main > "$1".out
+dot "$1.out" -Tpng -o "$1.tree.png"
+shotwell "$1.tree.png"

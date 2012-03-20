@@ -1,0 +1,4 @@
+var
+  v1, v2: longint;
+  v33: myType;
+

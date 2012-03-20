@@ -1,0 +1,44 @@
+digraph parsed {
+  v0 [label="S"];
+  v0 -> v1;
+  subgraph {
+    rank = max;
+    v1 [label="var" shape=box width=0.2]
+  };
+  v0 -> v2;
+  v2 [label="F"];
+  v2 -> v3;
+  subgraph {
+    rank = max;
+    v3 [label="n" shape=box width=0.2]
+  };
+  v2 -> v4;
+  v4 [label="A"];
+  v4 -> v5;
+  subgraph {
+    rank = max;
+    v5 [label="" shape=box width=0.2]
+  };
+  v2 -> v6;
+  subgraph {
+    rank = max;
+    v6 [label=":" shape=box width=0.2]
+  };
+  v2 -> v7;
+  subgraph {
+    rank = max;
+    v7 [label="n" shape=box width=0.2]
+  };
+  v0 -> v8;
+  subgraph {
+    rank = max;
+    v8 [label=";" shape=box width=0.2]
+  };
+  v0 -> v9;
+  v9 [label="E"];
+  v9 -> v10;
+  subgraph {
+    rank = max;
+    v10 [label="" shape=box width=0.2]
+  };
+}
