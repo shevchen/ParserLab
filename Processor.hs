@@ -35,8 +35,8 @@ process :: NonTerm -> [Term] -> (ParseTree, [Term])
 process nonTerm left = let (children, next) = searchForRule nonTerm left (rules nonTerm) in
   (Node children, next)
 
-processAll :: NonTerm -> [Term] -> ParseTree
-processAll start text = let (tree, left) = process start text in
+processAll :: [Term] -> ParseTree
+processAll text = let (tree, left) = process S text in
   case left of
-    [EndOfLine] -> Node [Right (start, tree)]
+    [EndOfLine] -> Node [Right (S, tree)]
     _           -> error("Some symbols were not parsed at all.")
